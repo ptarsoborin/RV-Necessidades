@@ -1,0 +1,8 @@
+venv/
+dados/
+tests/
+__pycache__/
+*.pyc
+*.bat
+*.sh
+requirements-dev.txt

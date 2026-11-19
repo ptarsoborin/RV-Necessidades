@@ -53,7 +53,7 @@ def entrar():
         login = (request.form.get('login') or '').strip()[:80]
         senha = request.form.get('senha') or ''
         ip = ip_do_cliente()
-        u = db.execute('SELECT * FROM usuario WHERE login = ?', (login,)).fetchone() if login else None
+        u = db.execute('SELECT * FROM usuario WHERE lower(login) = lower(?)', (login,)).fetchone() if login else None
         agora = datetime.now(timezone.utc)
         if u is not None and u['bloqueado_ate'] and datetime.fromisoformat(u['bloqueado_ate']) > agora:
             falta = int((datetime.fromisoformat(u['bloqueado_ate']) - agora).total_seconds() // 60) + 1

@@ -8,7 +8,6 @@ import copy
 import json
 import math
 import re
-import sqlite3
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
@@ -711,7 +710,7 @@ def criar_pedido(db, perm, usuario, entrada):
         try:
             _gravar_pedido(db, p, True)
             break
-        except sqlite3.IntegrityError:
+        except bd.IntegrityError:
             db.rollback()
     else:
         raise Conflito('Não foi possível numerar o formulário. Tente de novo.')

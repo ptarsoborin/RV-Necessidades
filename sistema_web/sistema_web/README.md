@@ -80,11 +80,49 @@ Grava uma cópia consistente do banco em `backup`, dentro da pasta de dados, man
 
 A decisão é o **túnel Cloudflare**: o computador se conecta à Cloudflare e ninguém abre porta no roteador. O sistema já está preparado: ao rodar atrás do túnel, defina `RVN_PROXY=1` e `RVN_HTTPS=1` (cookie Secure, HSTS e IP real no registro) e mantenha o sistema em `127.0.0.1`. Nunca abra a porta 8080 no roteador. Para a rede do escritório sem túnel, use `--host 0.0.0.0` só dentro da rede interna.
 
+## No ar: Vercel + Supabase
+
+O mesmo código roda na Vercel com o banco Postgres do Supabase. Sem `DATABASE_URL`, continua usando o SQLite do computador.
+
+**1. Supabase (banco)**
+1. Crie um projeto em supabase.com e guarde a senha do banco. O projeto atual está em **US East (Ohio)**, `us-east-2`.
+2. Em *Connect*, copie a connection string do **Transaction pooler** (porta `6543`), algo como
+   `postgresql://postgres.xxxx:[SENHA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`, e troque `[SENHA]` pela senha do banco.
+
+**2. Vercel (site)**
+1. Em vercel.com, *Add New > Project*, importe o repositório do GitHub.
+2. Em **Root Directory**, escolha `sistema_web/sistema_web`. O resto fica no padrão.
+3. Em *Environment Variables*, crie:
+   - `DATABASE_URL`: a connection string do Supabase;
+   - `RVN_SECRET_KEY`: um texto aleatório longo. Para gerar: `python -c "import secrets; print(secrets.token_hex(32))"`.
+4. Clique em *Deploy*. A região da função já vem fixada em Cleveland (`cle1`, no `vercel.json`), ao lado do banco em Ohio. Se o banco mudar de região, mude essa também.
+
+**3. Admin (uma vez, do seu computador)**
+
+No PowerShell, dentro desta pasta:
+```
+$env:DATABASE_URL = "a connection string do Supabase"
+venv\Scripts\python -m rvn criar-admin --login paulo --nome "Paulo"
+```
+As tabelas são criadas sozinhas na primeira execução.
+
+**Como fica no ar**
+- HTTPS, cookie Secure e IP real no registro ligam sozinhos na Vercel (`RVN_HTTPS` e `RVN_PROXY`).
+- Backup: é do Supabase (*Database > Backups*). O `backup.bat` só vale para o SQLite.
+- Limite da Vercel: cada envio tem no máximo **4,5 MB**. Os relatórios e Monitores de hoje têm até uns 2 MB.
+- No plano grátis, o Supabase pausa o banco depois de 7 dias sem nenhum acesso. Para reativar: painel do Supabase, *Restore project*.
+- Cada relatório ocupa cerca de 1,2 MB no banco, e o plano grátis tem 500 MB: os 60 guardados por padrão cabem com folga.
+
 ## Testes
 
 ```
 venv/bin/pip install -r requirements-dev.txt
 venv/bin/python -m pytest
+```
+
+Para rodar os mesmos testes contra um Postgres (o banco é **apagado** a cada teste: use um banco só para isso):
+```
+RVN_TEST_PG=postgresql://postgres:senha@127.0.0.1:5432/rvn_teste venv/bin/python -m pytest
 ```
 
 ## Atualizar de uma versão anterior

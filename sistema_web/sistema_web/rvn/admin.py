@@ -23,7 +23,7 @@ def _dados_usuario(form, existente=None):
     if existente is None:
         if not _LOGIN.match(d['login']):
             erros.append('O usuário precisa ter de 3 a 40 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado.')
-        elif bd.get_db().execute('SELECT 1 FROM usuario WHERE login = ?', (d['login'],)).fetchone():
+        elif bd.get_db().execute('SELECT 1 FROM usuario WHERE lower(login) = lower(?)', (d['login'],)).fetchone():
             erros.append('Já existe um usuário com esse login.')
     if not d['nome']:
         erros.append('Informe o nome.')
@@ -138,12 +138,12 @@ def permissoes_nivel():
                 novo = request.form.get('p__%s__%s' % (n, chave)) == '1'
                 if novo != vals[chave]:
                     mudancas.append('%s / %s: %s -> %s' % (n, chave, _efetivo_texto(vals[chave]), _efetivo_texto(novo)))
-                db.execute('INSERT OR REPLACE INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?)', (n, chave, '1' if novo else '0'))
+                db.execute('INSERT INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?) ON CONFLICT (nivel, chave) DO UPDATE SET valor = excluded.valor', (n, chave, '1' if novo else '0'))
             esc = request.form.get('e__' + n)
             if esc in pm.ESCOPOS_NIVEL:
                 if esc != escopo:
                     mudancas.append('%s / alcance dos dados: %s -> %s' % (n, escopo, esc))
-                db.execute('INSERT OR REPLACE INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?)', (n, pm.ESCOPO_CHAVE, esc))
+                db.execute('INSERT INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?) ON CONFLICT (nivel, chave) DO UPDATE SET valor = excluded.valor', (n, pm.ESCOPO_CHAVE, esc))
         db.commit()
         bd.registrar('permissoes_nivel', '; '.join(mudancas) or 'sem mudanças', g.usuario, ip_do_cliente())
         flash('Permissões dos níveis salvas.' if mudancas else 'Nada mudou.', 'ok')
@@ -183,7 +183,7 @@ def usuario_acessos(uid):
         db.execute('DELETE FROM escopo_usuario WHERE usuario_id = ?', (uid,))
         for tipo, campo in (('comprador', 'compradores_sel'), ('marca', 'marcas_sel')):
             for v in _lista(request.form.get(campo)):
-                db.execute('INSERT OR IGNORE INTO escopo_usuario (usuario_id, tipo, valor) VALUES (?, ?, ?)', (uid, tipo, v))
+                db.execute('INSERT INTO escopo_usuario (usuario_id, tipo, valor) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', (uid, tipo, v))
         db.execute('UPDATE usuario SET sessao_versao = sessao_versao + 1 WHERE id = ?', (uid,))   # a pessoa passa a ver o novo acesso no próximo clique
         db.commit()
         depois = pm.resolver(db, db.execute('SELECT * FROM usuario WHERE id = ?', (uid,)).fetchone())
@@ -213,7 +213,7 @@ def auditoria():
         sql += ' AND acao = ?'
         args.append(acao)
     if login:
-        sql += ' AND login LIKE ?'
+        sql += ' AND lower(login) LIKE lower(?)'
         args.append('%' + login + '%')
     linhas = db.execute(sql + ' ORDER BY id DESC LIMIT 300', args).fetchall()
     acoes = [r[0] for r in db.execute('SELECT DISTINCT acao FROM auditoria ORDER BY acao')]

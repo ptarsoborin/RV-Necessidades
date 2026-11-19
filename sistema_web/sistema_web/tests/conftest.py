@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -10,9 +11,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from rvn import create_app, db as bd, seguranca  # noqa: E402
 
 
+# Com RVN_TEST_PG=postgresql://... os testes rodam contra um Postgres (o banco é zerado a cada teste).
+PG = os.environ.get('RVN_TEST_PG', '').strip()
+
+
+def _zerar_pg():
+    conn = bd.conectar(PG)
+    try:
+        conn.executescript('DROP SCHEMA public CASCADE; CREATE SCHEMA public;')
+        conn.commit()
+    finally:
+        conn.close()
+
+
 @pytest.fixture()
 def app(tmp_path):
-    app = create_app({'DADOS': tmp_path, 'TESTING': True, 'SECRET_KEY': 'teste'})
+    config = {'DADOS': tmp_path, 'TESTING': True, 'SECRET_KEY': 'teste'}
+    if PG:
+        _zerar_pg()
+        config['DB'] = PG
+    app = create_app(config)
     return app
 
 

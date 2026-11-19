@@ -196,8 +196,9 @@ def resolver(db, usuario):
 
 def semear(db):
     """Grava o padrão dos níveis que ainda não existem (não sobrescreve o que o admin já escolheu)."""
+    linhas = []
     for nivel in NIVEIS_EDITAVEIS:
-        for chave, _r, _g, _p in CATALOGO:
-            db.execute('INSERT OR IGNORE INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?)', (nivel, chave, padrao(chave, nivel)))
-        db.execute('INSERT OR IGNORE INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?)', (nivel, ESCOPO_CHAVE, ESCOPO_PADRAO[nivel]))
+        linhas += [(nivel, chave, padrao(chave, nivel)) for chave, _r, _g, _p in CATALOGO]
+        linhas.append((nivel, ESCOPO_CHAVE, ESCOPO_PADRAO[nivel]))
+    db.executemany('INSERT INTO perm_nivel (nivel, chave, valor) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', linhas)
     db.commit()

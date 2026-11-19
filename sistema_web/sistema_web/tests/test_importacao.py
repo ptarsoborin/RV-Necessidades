@@ -239,7 +239,7 @@ def test_pagina_sem_nenhuma_permissao_de_dados_nao_recebe_dados(app, com_dados):
         uid = db.execute("SELECT id FROM usuario WHERE login = 'marcelo'").fetchone()[0]
         for c in pm.CHAVES:
             if c.startswith('ver.') and c != 'ver.cliente_valor':
-                db.execute('INSERT OR REPLACE INTO perm_usuario (usuario_id, chave, valor) VALUES (?, ?, ?)', (uid, c, '0'))
+                db.execute('INSERT INTO perm_usuario (usuario_id, chave, valor) VALUES (?, ?, ?) ON CONFLICT (usuario_id, chave) DO UPDATE SET valor = excluded.valor', (uid, c, '0'))
         db.commit()
     c = app.test_client()
     entrar(c, 'marcelo')
@@ -398,7 +398,7 @@ def test_pagina_do_sistema_entrega_identidade_e_permissoes(app, contas):
 def test_a_importacao_sobrevive_a_reiniciar_o_servidor(app, com_dados, tmp_path):
     """Fechar e abrir o sistema (ou reiniciar o computador) não pede para importar de novo."""
     from rvn import create_app
-    reiniciado = create_app({'DADOS': app.config['DADOS'], 'TESTING': True, 'SECRET_KEY': 'teste'})
+    reiniciado = create_app({'DADOS': app.config['DADOS'], 'DB': app.config['DB'], 'TESTING': True, 'SECRET_KEY': 'teste'})
     mar = reiniciado.test_client()
     entrar(mar, 'marcelo')
     est = mar.get('/api/estado').get_json()

@@ -41,17 +41,17 @@ def main(argv=None):
 
     pasta = cfg.pasta_dados()
     if args.cmd == 'init-db':
-        bd.init_db(str(pasta / 'rvn.db'))
-        print('Banco pronto em', pasta / 'rvn.db')
+        bd.init_db(cfg.alvo_banco(pasta))
+        print('Banco pronto em', 'Postgres' if cfg.url_banco() else pasta / 'rvn.db')
         return 0
     if args.cmd == 'backup':
-        bd.init_db(str(pasta / 'rvn.db'))
-        destino = bd.backup(str(pasta / 'rvn.db'), args.pasta or (pasta / 'backup'), args.manter)
+        bd.init_db(cfg.alvo_banco(pasta))
+        destino = bd.backup(cfg.alvo_banco(pasta), args.pasta or (pasta / 'backup'), args.manter)
         print('Backup gravado em', destino)
         return 0
     if args.cmd == 'tem-admin':
-        bd.init_db(str(pasta / 'rvn.db'))
-        conn = bd.conectar(str(pasta / 'rvn.db'))
+        bd.init_db(cfg.alvo_banco(pasta))
+        conn = bd.conectar(cfg.alvo_banco(pasta))
         try:
             return 0 if conn.execute("SELECT 1 FROM usuario WHERE nivel = 'admin'").fetchone() else 1
         finally:
@@ -76,7 +76,7 @@ def main(argv=None):
             print('Admin criado. Entre no sistema com o usuário', args.login.strip().lower())
             return 0
         if args.cmd == 'redefinir-senha':
-            u = db.execute('SELECT * FROM usuario WHERE login = ?', (args.login,)).fetchone()
+            u = db.execute('SELECT * FROM usuario WHERE lower(login) = lower(?)', (args.login,)).fetchone()
             if not u:
                 print('Usuário não encontrado.')
                 return 1

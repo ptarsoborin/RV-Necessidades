@@ -1,5 +1,7 @@
 import re
 
+import pytest
+
 from conftest import entrar, novo_usuario, token
 from rvn import db as bd, permissoes as pm
 
@@ -157,6 +159,8 @@ def test_nivel_pode_trocar_o_alcance_padrao(app, contas):
 
 # ---------------------------------------------------------------- banco e backup
 def test_backup_copia_o_banco_e_mantem_so_as_ultimas(app, contas, tmp_path):
+    if bd.eh_postgres(app.config['DB']):
+        pytest.skip('no Postgres (Supabase) o backup é do próprio Supabase')
     destino = tmp_path / 'bk'
     for _ in range(4):
         import time

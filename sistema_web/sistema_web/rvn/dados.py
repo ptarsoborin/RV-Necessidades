@@ -52,10 +52,10 @@ def importar_relatorio(db, usuario, nome_arquivo, dados, ref_campo='', forcar=Fa
         db.execute('DELETE FROM relatorio WHERE id = ?', (i,))
     cur = db.execute(
         'INSERT INTO relatorio (ref_at, importado_em, usuario_id, importado_por, arquivo, tamanho, hash, aba, notas, itens, comprar_n, imin_n, ent_n) '
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
         (ref, bd.agora(), usuario['id'], usuario['nome'], (nome_arquivo or '')[:200], len(dados), h, lido['aba'], _json(notas),
          c['itens'], c['comprar_n'], c['imin_n'], c['ent_n']))
-    rid = cur.lastrowid
+    rid = cur.fetchone()[0]
     db.executemany(
         'INSERT INTO relatorio_item (relatorio_id, comprador_n, marca_n, codigo, dados) VALUES (?, ?, ?, ?, ?)',
         [(rid, norm(r['comprador']), norm(r['marca']), r['codigo'], _json([r[k] for k in leitor.CAMPOS])) for r in linhas])
@@ -68,7 +68,7 @@ def podar_relatorios(db, manter, preservar):
     """Guarda só os relatórios mais recentes (o que acabou de entrar nunca é apagado)."""
     if manter <= 0:
         return
-    velhos = [r['id'] for r in db.execute('SELECT id FROM relatorio ORDER BY ref_at DESC, importado_em DESC, id DESC LIMIT -1 OFFSET ?', (manter,))]
+    velhos = [r['id'] for r in db.execute('SELECT id FROM relatorio ORDER BY ref_at DESC, importado_em DESC, id DESC').fetchall()[manter:]]
     for i in velhos:
         if i != preservar:
             db.execute('DELETE FROM relatorio WHERE id = ?', (i,))
@@ -127,13 +127,13 @@ def importar_monitor(db, usuario, nome_arquivo, dados, ref_campo='', manter=10):
         db.execute('DELETE FROM monitor WHERE id = ?', (i,))
     cur = db.execute(
         'INSERT INTO monitor (ref_at, importado_em, usuario_id, importado_por, arquivo, tamanho, hash, aba, linhas, bloqueadas, pedidos, produtos) '
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
         (ref, bd.agora(), usuario['id'], usuario['nome'], (nome_arquivo or '')[:200], len(dados), h, lido['aba'], r['linhas'], r['bloqueadas'], r['pedidos'], r['produtos']))
-    mid = cur.lastrowid
+    mid = cur.fetchone()[0]
     db.executemany('INSERT INTO monitor_item (monitor_id, codigo, dados) VALUES (?, ?, ?)',
                    [(mid, x['codigo'], _json([x[k] for k in leitor.MON_CAMPOS] + [len(tot[x['pedido']]), len(blq.get(x['pedido'], ()))])) for x in linhas])
     if manter > 0:
-        for m in db.execute('SELECT id FROM monitor ORDER BY ref_at DESC, importado_em DESC, id DESC LIMIT -1 OFFSET ?', (manter,)).fetchall():
+        for m in db.execute('SELECT id FROM monitor ORDER BY ref_at DESC, importado_em DESC, id DESC').fetchall()[manter:]:
             if m['id'] != mid:
                 db.execute('DELETE FROM monitor WHERE id = ?', (m['id'],))
     db.commit()

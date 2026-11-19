@@ -1,0 +1,5 @@
+Bibliotecas de terceiros usadas no navegador (copiadas sem alteração, para funcionar sem internet):
+
+- SheetJS Community Edition 0.18.5 (xlsx.full.min.js), licença Apache-2.0, https://sheetjs.com
+- jsPDF 2.5.1 (jspdf.umd.min.js), licença MIT, https://github.com/parallax/jsPDF
+- jsPDF-AutoTable 3.5.31 (jspdf.plugin.autotable.min.js), licença MIT, https://github.com/simonbengtsson/jsPDF-AutoTable

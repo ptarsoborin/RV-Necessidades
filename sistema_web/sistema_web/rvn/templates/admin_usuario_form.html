@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ 'Novo usuário' if novo else 'Editar usuário' }} · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>{{ 'Novo usuário' if novo else 'Editar usuário' }}</h1>
+<p class="sub">{% if novo %}O sistema gera uma senha temporária, mostrada uma única vez.{% else %}{{ u['login'] }}{% endif %}</p>
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf() }}">
+    {% if novo %}
+    <label for="login">Usuário (para entrar)</label>
+    <input type="text" id="login" name="login" value="{{ u['login'] }}" autocomplete="off" required>
+    {% endif %}
+    <label for="nome">Nome</label>
+    <input type="text" id="nome" name="nome" value="{{ u['nome'] }}" required>
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" value="{{ u['email'] }}">
+    <label for="nivel">Nível</label>
+    <select id="nivel" name="nivel">
+      {% for k, r in niveis %}<option value="{{ k }}"{% if u['nivel'] == k %} selected{% endif %}>{{ r }}</option>{% endfor %}
+    </select>
+    <label for="cp">Comprador no Protheus (obrigatório para o nível Comprador)</label>
+    <input type="text" id="cp" name="comprador_protheus" value="{{ u['comprador_protheus'] }}" placeholder="como aparece na coluna Comprador do relatório">
+    {% if not novo %}
+    <label><input type="checkbox" name="ativo" value="1"{% if u['ativo'] %} checked{% endif %}> Usuário ativo</label>
+    {% endif %}
+    <p class="linha"><button class="btn" type="submit">Salvar</button> <a class="btn sec" href="{{ url_for('admin.usuarios') }}">Cancelar</a></p>
+  </form>
+</div>
+{% endblock %}

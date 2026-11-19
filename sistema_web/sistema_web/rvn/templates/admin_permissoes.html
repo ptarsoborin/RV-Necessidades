@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block titulo %}Níveis e permissões · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>Níveis e permissões</h1>
+<p class="sub">O que cada nível vê e pode fazer por padrão. Para abrir uma exceção para uma pessoa, use <b>Acessos</b> na lista de usuários. O Admin sempre tem tudo.</p>
+<form method="post">
+<input type="hidden" name="csrf" value="{{ csrf() }}">
+<div class="card">
+<table>
+  <thead><tr><th>Permissão</th>{% for k, r in niveis %}<th class="c">{{ r }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for g in grupos %}
+    <tr class="grupo"><td colspan="5">{{ g }}</td></tr>
+    {% for chave, rotulo, grupo, _p in catalogo if grupo == g %}
+    <tr>
+      <td>{{ rotulo }}</td>
+      <td class="c">✓</td>
+      {% for n in editaveis %}
+      <td class="c"><input type="checkbox" name="p__{{ n }}__{{ chave }}" value="1" aria-label="{{ rotulo }}: {{ n }}"{% if atual[n][0][chave] %} checked{% endif %}></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  {% endfor %}
+    <tr class="grupo"><td colspan="5">Alcance dos dados</td></tr>
+    <tr>
+      <td>Quais compradores a pessoa vê<br><span class="nota">Escolher compradores e Marcas específicos é feito por pessoa, em Acessos.</span></td>
+      <td class="c">Todos</td>
+      {% for n in editaveis %}
+      <td class="c"><select name="e__{{ n }}" aria-label="Alcance: {{ n }}">
+        {% for k, r in escopos %}<option value="{{ k }}"{% if atual[n][1] == k %} selected{% endif %}>{{ r }}</option>{% endfor %}
+      </select></td>
+      {% endfor %}
+    </tr>
+    <tr class="grupo"><td colspan="5">Estrutura (só o Admin, não delegável)</td></tr>
+    {% for chave, rotulo in estrutura %}
+    <tr><td>{{ rotulo }}</td><td class="c">✓</td><td class="c so-admin">—</td><td class="c so-admin">—</td><td class="c so-admin">—</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="linha"><button class="btn" type="submit">Salvar permissões</button> <span class="nota">As mudanças valem no próximo clique de cada pessoa e ficam no registro de ações.</span></p>
+</form>
+{% endblock %}

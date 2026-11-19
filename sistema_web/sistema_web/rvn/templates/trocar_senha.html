@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block titulo %}Trocar senha · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>Trocar senha</h1>
+<p class="sub">{% if obrigatoria %}Por segurança, troque a senha temporária antes de continuar.{% else %}Escolha uma senha nova.{% endif %}</p>
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf() }}">
+    <label for="atual">Senha atual</label>
+    <input type="password" id="atual" name="atual" autocomplete="current-password" required>
+    <label for="nova">Nova senha</label>
+    <input type="password" id="nova" name="nova" autocomplete="new-password" required>
+    <label for="repete">Repita a nova senha</label>
+    <input type="password" id="repete" name="repete" autocomplete="new-password" required>
+    <p class="nota">Pelo menos 10 caracteres, com letras e números.</p>
+    <p><button class="btn" type="submit">Salvar senha</button></p>
+  </form>
+</div>
+{% endblock %}

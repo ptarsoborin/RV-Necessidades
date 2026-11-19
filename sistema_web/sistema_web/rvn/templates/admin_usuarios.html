@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block titulo %}Usuários · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>Usuários</h1>
+<p class="sub">Só o admin cria usuários e escolhe o que cada um vê e pode fazer.</p>
+<p><a class="btn" href="{{ url_for('admin.usuario_novo') }}">Novo usuário</a> <a class="btn sec" href="{{ url_for('admin.permissoes_nivel') }}">Níveis e permissões</a></p>
+<div class="card">
+<table>
+  <thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Comprador (Protheus)</th><th>Último acesso</th><th></th></tr></thead>
+  <tbody>
+  {% for u in lista %}
+  <tr class="{{ '' if u['ativo'] else 'inativo' }}">
+    <td>{{ u['nome'] }}{% if not u['ativo'] %} <span class="chip off">desativado</span>{% endif %}{% if u['deve_trocar'] %} <span class="chip off">senha temporária</span>{% endif %}</td>
+    <td class="mono">{{ u['login'] }}</td>
+    <td><span class="chip {{ 'adm' if u['nivel'] == 'admin' else '' }}">{{ NIVEL_ROTULO[u['nivel']] }}</span></td>
+    <td>{{ u['comprador_protheus'] }}</td>
+    <td>{{ u['ultimo_acesso']|local or 'nunca' }}</td>
+    <td class="linha">
+      <a class="btn sec mini" href="{{ url_for('admin.usuario_editar', uid=u['id']) }}">Editar</a>
+      {% if u['nivel'] != 'admin' %}<a class="btn sec mini" href="{{ url_for('admin.usuario_acessos', uid=u['id']) }}">Acessos</a>{% endif %}
+      <form method="post" action="{{ url_for('admin.usuario_senha', uid=u['id']) }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn sec mini" type="submit">Nova senha</button></form>
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="6">Nenhum usuário.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+# Ignora tudo na raiz, exceto o código
+/*
+!/.gitignore
+!/sistema_web/
+
+# Dados e segredos, em qualquer pasta
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.zip
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+*.key
+*.pem
+backups/

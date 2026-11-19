@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}RV Necessidades{% endblock %}</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if usuario %}
+<div class="app">
+  <aside class="side">
+    <div class="logo"><img src="{{ url_for('static', filename='logo.png') }}" alt="Autopel soluções"></div>
+    <h2>RV Necessidades</h2>
+    <nav aria-label="Páginas">
+      <a href="{{ url_for('paginas.sistema') }}">Voltar ao sistema</a>
+      {% if perm.pode('estrutura.usuarios') %}
+      <div class="grupo">Administração</div>
+      <a href="{{ url_for('admin.usuarios') }}"{% if request.endpoint in ('admin.usuarios', 'admin.usuario_novo', 'admin.usuario_editar', 'admin.usuario_acessos', 'admin.usuario_senha') %} aria-current="page"{% endif %}>Usuários</a>
+      <a href="{{ url_for('admin.permissoes_nivel') }}"{% if request.endpoint == 'admin.permissoes_nivel' %} aria-current="page"{% endif %}>Níveis e permissões</a>
+      <a href="{{ url_for('admin.auditoria') }}"{% if request.endpoint == 'admin.auditoria' %} aria-current="page"{% endif %}>Registro de ações</a>
+      {% endif %}
+    </nav>
+    <div class="quem">
+      <b>{{ usuario['nome'] }}</b>
+      {{ NIVEL_ROTULO[usuario['nivel']] }}
+      <form method="post" action="{{ url_for('auth.sair') }}">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        <a href="{{ url_for('auth.trocar_senha') }}">Trocar senha</a>
+        <button type="submit">Sair</button>
+      </form>
+    </div>
+  </aside>
+  <main>
+    {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="msg {{ cat }}" role="status">{{ m }}</div>{% endfor %}{% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</div>
+{% else %}
+<main class="login">
+  {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="msg {{ cat }}" role="status">{{ m }}</div>{% endfor %}{% endwith %}
+  {% block conteudo_aberto %}{% endblock %}
+</main>
+{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

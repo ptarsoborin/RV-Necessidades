@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RV Necessidades</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='rv/app.css') }}">
+</head>
+<body>
+
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Menu principal">
+    <div class="side-logo"><span class="logo"><img src="{{ url_for('static', filename='logo.png') }}" alt="Autopel soluções" width="155" height="56"></span></div>
+    <div class="side-app">RV Necessidades</div>
+    <nav id="nav" aria-label="Páginas"></nav>
+    <div class="side-user" id="userbar">
+      <b>{{ usuario['nome'] }}</b>
+      <span class="exl">{{ NIVEL_ROTULO[usuario['nivel']] }}</span>
+      <form method="post" action="{{ url_for('auth.sair') }}" class="side-acoes">
+        <input type="hidden" name="csrf" value="{{ csrf() }}">
+        {% if perm.pode('estrutura.usuarios') %}<a href="{{ url_for('admin.usuarios') }}">Administração</a>{% endif %}
+        <a href="{{ url_for('auth.trocar_senha') }}">Trocar senha</a>
+        <button type="submit">Sair</button>
+      </form>
+    </div>
+    <div class="side-foot">Os dados ficam no servidor da empresa. Cada pessoa vê só o que o administrador liberou.</div>
+  </aside>
+  <div class="main">
+    <header class="top" id="top">
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="Abrir ou fechar o menu" aria-expanded="false">&#9776;</button>
+      <div class="top-title"><h1 id="pgTitle">Painel</h1><span class="sub" id="pgSub"></span></div>
+      <div class="top-ctl">
+        <div class="viewsw" id="viewSw" hidden></div>
+        <div class="snapsel"><label for="snapSel" class="exl">Relatório</label><select id="snapSel" aria-label="Relatório"></select></div>
+      </div>
+    </header>
+    <main class="content" id="content">
+      <div class="flash" id="flash" role="status" aria-live="polite" hidden></div>
+      <span class="note" id="drawerMsg" role="status" aria-live="polite"></span>
+      <nav class="pgtabs" id="pgTabs" aria-label="Seções desta área" hidden></nav>
+
+      <section class="page" id="pg-importar" hidden>
+        <section class="import" id="secImport" aria-labelledby="h-imp">
+          <h2 id="h-imp">Importar relatório</h2>
+          <div class="drop" id="drop">
+            <label class="btn" id="pick" for="file" tabindex="0" role="button">Importar relatório</label>
+            <input type="file" id="file" accept=".xlsx,.xlsm">
+            <div class="drop-text"><strong>Escolha o anexo recebido por e-mail</strong> ou arraste o arquivo para cá. Pode ser feito a qualquer hora do dia.</div>
+            <div class="field">
+              <label for="ref">Data em que o relatório foi gerado</label>
+              <input type="date" id="ref">
+              <span class="hint">Obrigatória: define o que está atrasado. Se o nome do arquivo tiver a data (2026-10-22 ou 22-10-2026), ela é lida do nome e vale como data do relatório.</span>
+            </div>
+          </div>
+          <div class="status busy" id="status" role="status" aria-live="polite"></div>
+        </section>
+        <section class="card">
+          <div class="card-h"><h3>Relatório vigente</h3></div>
+          <div class="who"><b id="snapTitle"></b><span class="note" id="snapMeta"></span></div>
+          <div class="snapctl">
+            <button class="btn ghost danger" id="del" type="button">Excluir este relatório</button>
+            <button class="btn ghost" id="delNo" type="button" hidden>Cancelar</button>
+          </div>
+          <p class="note">O relatório mostrado em todas as páginas é o escolhido no alto da tela, em &ldquo;Relatório&rdquo;. Cada importação fica guardada no servidor.</p>
+        </section>
+        <section class="card">
+          <div class="card-h"><h3>O que o sistema confere a cada importação</h3></div>
+          <ul class="checks">
+            <li>O sistema lê <b>só a aba <code>Geral</code></b>, com as colunas do relatório; abas por comprador são ignoradas. Espaços nos cabeçalhos são ignorados.</li>
+            <li>Código do item único. Linhas de subtotal sem código são descartadas.</li>
+            <li>COMPRAR = PontoPedido − Disponível + VendProt − Comprado.</li>
+            <li>RUPTURA = menor valor entre 0 e (Disponível − VendProt).</li>
+            <li>Ruptura coberta quando Comprado é maior ou igual à falta: o item sai de Rupturas e vai para a cobrança de entrega.</li>
+            <li>Data de geração informada (campo ou nome do arquivo) e conferida com a última compra do relatório.</li>
+            <li>Arquivo idêntico a um já importado é barrado.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section class="page" id="pg-exportar" hidden>
+        <p class="note" id="expSemRel" hidden>Importe um relatório para exportar.</p>
+        <p class="note">Gera o relatório em PDF ou Excel com a foto da data-base. Os filtros das telas não alteram o que é exportado. Todo arquivo exportado fica desatualizado no dia seguinte.</p>
+        <div class="export" id="export">
+          <span class="exl">Exportar</span>
+          <label for="expBuyer" class="inl">Comprador</label>
+          <select id="expBuyer"></select>
+          <label class="chk" for="expTodas"><input type="checkbox" id="expTodas"> Incluir todas as compras em aberto</label>
+          <button type="button" class="btn" id="expPdf">Baixar PDF</button>
+          <button type="button" class="btn ghost" id="expXlsx">Baixar Excel</button>
+          <button type="button" class="btn ghost" id="expPdfAll">Um PDF para cada comprador</button>
+          <span class="note" id="expMsg" role="status" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <div class="panel" id="panel"></div>
+    </main>
+  </div>
+</div>
+
+<div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card" id="modalCard"></div></div>
+<input type="file" id="monFile" accept=".xlsx,.xlsm" hidden>
+<input type="file" id="fxFile" accept=".xlsx,.xls,.xlsm" hidden>
+
+<script type="application/json" id="rvn-config">{{ config | tojson }}</script>
+<script src="{{ url_for('static', filename='vendor/xlsx.full.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/jspdf.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/jspdf.plugin.autotable.min.js') }}"></script>
+<script src="{{ url_for('static', filename='rv/app.js') }}"></script>
+</body>
+</html>

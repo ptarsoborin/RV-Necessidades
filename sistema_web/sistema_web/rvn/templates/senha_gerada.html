@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block conteudo %}
+<h1>{{ motivo }}</h1>
+<p class="sub">{{ alvo['nome'] }} ({{ alvo['login'] }})</p>
+<div class="card">
+  <p>Senha temporária (aparece só agora; anote e entregue à pessoa):</p>
+  <p><span class="senha">{{ senha }}</span></p>
+  <p class="nota">No primeiro acesso o sistema pede a troca da senha. Ela não fica gravada em lugar nenhum: se perder, gere outra.</p>
+  <p><a class="btn" href="{{ url_for('admin.usuarios') }}">Voltar aos usuários</a></p>
+</div>
+{% endblock %}

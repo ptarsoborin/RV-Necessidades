@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block titulo %}Acessos de {{ u['nome'] }} · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>Acessos de {{ u['nome'] }}</h1>
+<p class="sub">{{ NIVEL_ROTULO[u['nivel']] }} · <span class="mono">{{ u['login'] }}</span>{% if u['comprador_protheus'] %} · comprador {{ u['comprador_protheus'] }}{% endif %}</p>
+{% if admin %}
+<div class="card"><p>O Admin tem todas as permissões e não aceita exceções.</p><p><a class="btn sec" href="{{ url_for('admin.usuarios') }}">Voltar</a></p></div>
+{% else %}
+<form method="post">
+<input type="hidden" name="csrf" value="{{ csrf() }}">
+<div class="card">
+<p class="nota">Cada linha vale o padrão do nível, a não ser que você escolha <b>Permitir</b> ou <b>Bloquear</b> para esta pessoa.</p>
+<table>
+  <thead><tr><th>Permissão</th><th class="c">Padrão do nível</th><th>Para esta pessoa</th><th class="c">Resultado</th></tr></thead>
+  <tbody>
+  {% for g in grupos %}
+    <tr class="grupo"><td colspan="4">{{ g }}</td></tr>
+    {% for l in linhas if l.grupo == g %}
+    <tr>
+      <td>{{ l.rotulo }}</td>
+      <td class="c">{{ 'sim' if l.nivel else 'não' }}</td>
+      <td><select name="u__{{ l.chave }}" aria-label="{{ l.rotulo }}">
+        <option value=""{% if l.excecao == '' %} selected{% endif %}>Seguir o nível</option>
+        <option value="1"{% if l.excecao == '1' %} selected{% endif %}>Permitir</option>
+        <option value="0"{% if l.excecao == '0' %} selected{% endif %}>Bloquear</option>
+      </select></td>
+      <td class="c {{ 'res-sim' if l.efetivo else 'res-nao' }}">{{ 'sim' if l.efetivo else 'não' }}</td>
+    </tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="card">
+  <h2>Alcance dos dados</h2>
+  <p class="nota">Padrão do nível: <b>{{ dict(escopos)[escopo_nivel] }}</b>. Resultado hoje: <b>{{ dict(escopos)[escopo_efetivo] }}</b>.</p>
+  <label for="u-escopo">Para esta pessoa</label>
+  <select id="u-escopo" name="u__escopo">
+    <option value=""{% if escopo_excecao == '' %} selected{% endif %}>Seguir o nível</option>
+    {% for k, r in escopos %}<option value="{{ k }}"{% if escopo_excecao == k %} selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
+  <div class="so-selecionados">
+    <label for="comp-sel">Compradores que ela vê (um por linha, como no Protheus)</label>
+    <textarea id="comp-sel" name="compradores_sel">{{ compradores }}</textarea>
+    <label for="marca-sel">Marcas que ela vê, de qualquer comprador (uma por linha)</label>
+    <textarea id="marca-sel" name="marcas_sel">{{ marcas }}</textarea>
+    <p class="nota">Vale o que estiver em qualquer uma das listas.</p>
+  </div>
+</div>
+<p class="linha"><button class="btn" type="submit">Salvar acessos</button> <a class="btn sec" href="{{ url_for('admin.usuarios') }}">Voltar</a></p>
+</form>
+{% endif %}
+{% endblock %}

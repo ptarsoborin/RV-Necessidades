@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block titulo %}Registro de ações · RV Necessidades{% endblock %}
+{% block conteudo %}
+<h1>Registro de ações</h1>
+<p class="sub">Acessos, tentativas, mudanças de usuários e de permissões. As 300 mais recentes.</p>
+<form method="get" class="linha">
+  <select name="acao" aria-label="Ação"><option value="">Todas as ações</option>{% for a in acoes %}<option value="{{ a }}"{% if a == acao %} selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+  <input type="text" name="login" value="{{ login }}" placeholder="usuário" aria-label="Usuário">
+  <button class="btn sec" type="submit">Filtrar</button>
+</form>
+<div class="card">
+<table>
+  <thead><tr><th>Quando</th><th>Usuário</th><th>Ação</th><th>Detalhe</th><th>Origem</th></tr></thead>
+  <tbody>
+  {% for l in linhas %}<tr><td>{{ l['quando']|local }}</td><td class="mono">{{ l['login'] }}</td><td>{{ l['acao'] }}</td><td>{{ l['detalhe'] }}</td><td class="mono">{{ l['ip'] }}</td></tr>
+  {% else %}<tr><td colspan="5">Nada registrado.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
